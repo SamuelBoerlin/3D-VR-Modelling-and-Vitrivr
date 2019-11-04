@@ -10,6 +10,10 @@ public class VRGuiPointer : MonoBehaviour
 
     [SerializeField] private Canvas canvas = null;
 
+    [SerializeField] private EventSystem eventSystem = null;
+
+    [SerializeField] private Camera camera = null;
+
     private GraphicRaycaster rayCaster = null;
 
     private RectTransform rectTransform;
@@ -22,17 +26,6 @@ public class VRGuiPointer : MonoBehaviour
 
     void Update()
     {
-
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, transform.localScale);
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(new Ray(Vector3.zero, new Vector3(0, 0, 1)));
-
-        Gizmos.matrix = Matrix4x4.identity;
-        Gizmos.color = Color.white;
         if (Input.GetAxis(clickInput) > 0.5)
         {
             Plane plane = new Plane(canvas.transform.rotation * new Vector3(0, 0, 1), canvas.transform.position);
@@ -58,18 +51,25 @@ public class VRGuiPointer : MonoBehaviour
 
                 PointerEventData ped = new PointerEventData(EventSystem.current);
 
-                ped.position = canvasPoint;
+                Vector3 wp = camera.WorldToScreenPoint(point);
+
+                ped.position = wp;
 
                 List<RaycastResult> results = new List<RaycastResult>();
 
                 rayCaster.Raycast(ped, results);
 
                 Debug.Log("Click");
-                foreach(RaycastResult result in results) {
-                    Debug.Log(results);
-                }
+                foreach (RaycastResult result in results)
+                {
+                    Debug.Log("Raycast");
 
-                Gizmos.DrawSphere(point, 0.05f);
+                    GameObject obj = result.gameObject;
+
+                    Debug.Log("Obj: " + obj);
+
+                    EventSystem.current.SetSelectedGameObject(obj);
+                }
             }
         }
     }
