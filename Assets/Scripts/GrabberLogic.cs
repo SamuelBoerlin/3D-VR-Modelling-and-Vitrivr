@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GrabberLogic : MonoBehaviour
 {
-    [SerializeField] private string triggerInput;
+    [SerializeField] private string triggerInput = "";
 
     private Vector3 lastGrabberPos;
 
@@ -25,8 +25,6 @@ public class GrabberLogic : MonoBehaviour
         var transform = this.gameObject.GetComponent<Transform>();
 
         Vector3 velocity = (transform.position - lastGrabberPos) / Time.fixedDeltaTime;
-
-        Debug.Log("Input: " + Input.GetAxis(triggerInput));
 
         if (Input.GetAxis(triggerInput) < 0.5)
         {
