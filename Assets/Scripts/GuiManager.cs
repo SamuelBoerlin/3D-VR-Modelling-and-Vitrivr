@@ -6,6 +6,8 @@ public class GuiManager : MonoBehaviour
 {
     [SerializeField] private string guiInput = "";
 
+    [SerializeField] private string triggerInput = "";
+
     [SerializeField] private GameObject guiPrefab = null;
 
     [SerializeField] private GameObject laserPrefab = null;
@@ -16,6 +18,8 @@ public class GuiManager : MonoBehaviour
 
     private GameObject openGui = null;
     private GameObject guiLaser = null;
+
+    private bool wasTriggerDown = false;
 
     void Update()
     {
@@ -28,6 +32,26 @@ public class GuiManager : MonoBehaviour
         else
         {
             RemoveGui();
+        }
+
+        bool isTriggerDown = Input.GetAxis(triggerInput) > 0.5f;
+        if(wasTriggerDown != isTriggerDown)
+        {
+            if(isTriggerDown)
+            {
+                GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
+                if (sculpture != null)
+                {
+                    Sculpture script = sculpture.GetComponent<Sculpture>();
+
+                    if(script != null)
+                    {
+                        script.ApplySdf(pointerHandTransform.position, Quaternion.identity, new BoxSDF(3.0f), 1, false);
+                    }
+                }
+            }
+
+            wasTriggerDown = isTriggerDown;
         }
     }
 
