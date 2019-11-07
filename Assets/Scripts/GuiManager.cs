@@ -21,6 +21,9 @@ public class GuiManager : MonoBehaviour
 
     private bool wasTriggerDown = false;
 
+    private OperationType opType = OperationType.Union;
+    private BrushType brushType = BrushType.Cube;
+
     void Update()
     {
         Debug.Log("Input " + Input.GetButton(guiInput));
@@ -37,7 +40,7 @@ public class GuiManager : MonoBehaviour
         bool isTriggerDown = Input.GetAxis(triggerInput) > 0.5f;
         if(wasTriggerDown != isTriggerDown)
         {
-            if(isTriggerDown)
+            if(openGui == null && isTriggerDown)
             {
                 GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
                 if (sculpture != null)
@@ -46,7 +49,27 @@ public class GuiManager : MonoBehaviour
 
                     if(script != null)
                     {
-                        script.ApplySdf(pointerHandTransform.position, Quaternion.identity, new BoxSDF(3.0f), 1, false);
+                        int material;
+                        if(opType == OperationType.Union)
+                        {
+                            material = 1;
+                        }
+                        else
+                        {
+                            material = 0;
+                        }
+
+                        ISdf shape;
+                        if(brushType == BrushType.Cube)
+                        {
+                            shape = new BoxSDF(8.0f);
+                        }
+                        else
+                        {
+                            shape = new SphereSDF(8.0f);
+                        }
+
+                        script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                     }
                 }
             }
@@ -90,10 +113,12 @@ public class GuiManager : MonoBehaviour
     public void SetOperationMode(OperationType type)
     {
         Debug.Log(type);
+        opType = type;
     }
 
     public void SetBrushMode(BrushType type)
     {
         Debug.Log(type);
+        brushType = type;
     }
 }

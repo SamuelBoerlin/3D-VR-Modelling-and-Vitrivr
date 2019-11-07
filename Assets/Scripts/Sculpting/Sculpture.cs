@@ -22,7 +22,7 @@ public class Sculpture : MonoBehaviour
 
     private Vector3 TransformPointToLocalSpace(Vector3 vec)
     {
-        return Matrix4x4.TRS(-transform.position, Quaternion.Inverse(transform.rotation), transform.lossyScale).MultiplyPoint(vec) + transform.position;
+        return Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale).inverse.MultiplyPoint(vec);
     }
 
     private Vector3 TransformDirToLocalSpace(Vector3 vec)

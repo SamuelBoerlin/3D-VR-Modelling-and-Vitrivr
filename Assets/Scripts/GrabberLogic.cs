@@ -6,17 +6,29 @@ public class GrabberLogic : MonoBehaviour
 {
     [SerializeField] private string triggerInput = "";
 
+    [SerializeField] private float grabDistance = 5.0f;
+
     private Vector3 lastGrabberPos;
 
-    private void OnCollisionStay(Collision collision)
+    private void Update()
     {
         if (Input.GetAxis(triggerInput) > 0.5)
         {
-            var otherObject = collision.gameObject;
-            otherObject.GetComponent<Transform>().SetParent(this.gameObject.GetComponent<Transform>());
-            Rigidbody rb = otherObject.GetComponent<Rigidbody>();
-            if (rb != null)
-                rb.isKinematic = true;
+            GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
+            if (sculpture != null)
+            {
+                Sculpture script = sculpture.GetComponent<Sculpture>();
+                if (script != null)
+                {
+                    if (script.RayCast(transform.position, transform.rotation * new Vector3(0, 0, 1), grabDistance, out Sculpture.RayCastResult result))
+                    {
+                        sculpture.transform.SetParent(this.gameObject.transform);
+                        Rigidbody rb = sculpture.GetComponent<Rigidbody>();
+                        if (rb != null)
+                            rb.isKinematic = true;
+                    }
+                }
+            }
         }
     }
 
