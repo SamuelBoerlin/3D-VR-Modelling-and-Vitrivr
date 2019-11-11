@@ -324,6 +324,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   triggerInput: Oculus_GearVR_LIndexTrigger
+  scaleInput: VR_Controller_Scale_Sculpture
+  scaleHandTransform: {fileID: 943940659}
+  minScale: 0.1
+  maxScale: 10
+  scaleStrength: 0.5
   grabDistance: 10
 --- !u!135 &581888066
 SphereCollider:

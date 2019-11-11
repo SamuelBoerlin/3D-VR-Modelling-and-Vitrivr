@@ -26,8 +26,6 @@ public class GuiManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log("Input " + Input.GetButton(guiInput));
-
         if(Input.GetButton(guiInput))
         {
             SpawnGui();
