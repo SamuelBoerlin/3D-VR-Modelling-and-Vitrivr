@@ -41,6 +41,11 @@ public class Sculpture : MonoBehaviour
         return chunk;
     }
 
+    public ICollection<SculptureChunk> GetChunks()
+    {
+        return chunks.Values;
+    }
+
     /// <summary>
     /// Applies the specified signed distance field function to the sculpture.
     /// The SDF is applied in local space, i.e. 1 voxel = 1 unit on the signed distance field!

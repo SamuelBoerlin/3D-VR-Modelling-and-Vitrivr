@@ -37,6 +37,26 @@ public class GrabberLogic : MonoBehaviour
                         Rigidbody rb = sculpture.GetComponent<Rigidbody>();
                         if (rb != null)
                             rb.isKinematic = true;
+                        return;
+                    }
+                }
+            }
+
+            QueryResultObject[] queryResults = FindObjectsOfType<QueryResultObject>();
+            foreach(var queryResultObject in queryResults)
+            {
+                var collider = queryResultObject.GetComponent<Collider>();
+                Debug.Log(queryResultObject);
+                if(collider != null)
+                {
+                    Debug.Log((collider.ClosestPoint(transform.position) - transform.position).magnitude);
+                    if ((collider.ClosestPoint(transform.position) - transform.position).magnitude < 0.1f)
+                    {
+                        queryResultObject.transform.SetParent(this.gameObject.transform);
+                        Rigidbody rb = queryResultObject.GetComponent<Rigidbody>();
+                        if (rb != null)
+                            rb.isKinematic = true;
+                        return;
                     }
                 }
             }

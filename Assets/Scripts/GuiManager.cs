@@ -24,6 +24,13 @@ public class GuiManager : MonoBehaviour
     private OperationType opType = OperationType.Union;
     private BrushType brushType = BrushType.Cube;
 
+    private float startScale;
+
+    private void Start()
+    {
+        startScale = GameObject.FindGameObjectWithTag("Sculpture").transform.localScale.x;
+    }
+
     void Update()
     {
         if(Input.GetButton(guiInput))
@@ -66,6 +73,8 @@ public class GuiManager : MonoBehaviour
                         {
                             shape = new SphereSDF(8.0f);
                         }
+
+                        shape = new ScaleSDF(1.0f / (sculpture.transform.localScale.x / startScale), shape);
 
                         script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                     }
