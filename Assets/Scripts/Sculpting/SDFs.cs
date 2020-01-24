@@ -1,259 +1,268 @@
-﻿using UnityEngine;
+﻿using Unity.Mathematics;
+using UnityEngine;
 
-sealed class OffsetSDF : ISdf
+namespace Sculpting
 {
-    private readonly Vector3 offset;
-    private readonly ISdf sdf;
-
-    public OffsetSDF(Vector3 offset, ISdf sdf)
+    readonly struct OffsetSDF<TSdf> : ISdf
+        where TSdf : struct, ISdf
     {
-        this.offset = offset;
-        this.sdf = sdf;
-    }
+        private readonly float3 offset;
+        private readonly TSdf sdf;
 
-    public double Eval(double x, double y, double z)
-    {
-        return sdf.Eval(x + offset.x, y + offset.y, z + offset.z);
-    }
-
-    public Vector3 Max()
-    {
-        return sdf.Max() - offset;
-    }
-
-    public Vector3 Min()
-    {
-        return sdf.Min() - offset;
-    }
-}
-
-sealed class BoxSDF : ISdf
-{
-    private readonly float radius;
-
-    public BoxSDF(float radius)
-    {
-        this.radius = radius;
-    }
-
-    public double Eval(double x, double y, double z)
-    {
-        float dx = Mathf.Abs((float)x) - radius;
-        float dy = Mathf.Abs((float)y) - radius;
-        float dz = Mathf.Abs((float)z) - radius;
-        return new Vector3(Mathf.Max(dx, 0), Mathf.Max(dy, 0), Mathf.Max(dz, 0)).magnitude + Mathf.Min(Mathf.Max(dx, Mathf.Max(dy, dz)), 0);
-    }
-
-    public Vector3 Max()
-    {
-        return new Vector3(radius, radius, radius);
-    }
-
-    public Vector3 Min()
-    {
-        return new Vector3(-radius, -radius, -radius);
-    }
-}
-
-sealed class SphereSDF : ISdf
-{
-    private readonly float radius;
-
-    public SphereSDF(float radius)
-    {
-        this.radius = radius;
-    }
-
-    public double Eval(double x, double y, double z)
-    {
-        return Mathf.Sqrt((float)(x * x + y * y + z * z)) - radius;
-    }
-
-    public Vector3 Max()
-    {
-        return new Vector3(radius, radius, radius);
-    }
-
-    public Vector3 Min()
-    {
-        return new Vector3(-radius, -radius, -radius);
-    }
-}
-
-sealed class TransformSDF : ISdf
-{
-    private readonly Matrix4x4 transform;
-    private readonly Matrix4x4 invTransform;
-    private readonly ISdf sdf;
-
-    public TransformSDF(Matrix4x4 transform, ISdf sdf)
-    {
-        this.invTransform = transform.inverse;
-        this.transform = transform;
-        this.sdf = sdf;
-    }
-
-    public TransformSDF(Matrix4x4 transform, Matrix4x4 invTransform, ISdf sdf)
-    {
-        this.invTransform = invTransform;
-        this.transform = transform;
-        this.sdf = sdf;
-    }
-
-    public double Eval(double x, double y, double z)
-    {
-        Vector3 point = this.invTransform.MultiplyPoint(new Vector3((float)x, (float)y, (float)z));
-        return sdf.Eval(point.x, point.y, point.z);
-    }
-
-    public Vector3 Max()
-    {
-        Vector3 min = this.sdf.Min();
-        Vector3 max = this.sdf.Max();
-        Vector3 worldMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-        for (int mx = 0; mx < 2; mx++)
+        public OffsetSDF(float3 offset, TSdf sdf)
         {
-            for (int my = 0; my < 2; my++)
+            this.offset = offset;
+            this.sdf = sdf;
+        }
+
+        public float Eval(float3 pos)
+        {
+            return sdf.Eval(pos + offset);
+        }
+
+        public float3 Max()
+        {
+            return sdf.Max() - offset;
+        }
+
+        public float3 Min()
+        {
+            return sdf.Min() - offset;
+        }
+    }
+
+    readonly struct BoxSDF : ISdf
+    {
+        private readonly float radius;
+
+        public BoxSDF(float radius)
+        {
+            this.radius = radius;
+        }
+
+        public float Eval(float3 pos)
+        {
+            float dx = Mathf.Abs(pos.x) - radius;
+            float dy = Mathf.Abs(pos.y) - radius;
+            float dz = Mathf.Abs(pos.z) - radius;
+            return new Vector3(Mathf.Max(dx, 0), Mathf.Max(dy, 0), Mathf.Max(dz, 0)).magnitude + Mathf.Min(Mathf.Max(dx, Mathf.Max(dy, dz)), 0);
+        }
+
+        public float3 Max()
+        {
+            return new float3(radius, radius, radius);
+        }
+
+        public float3 Min()
+        {
+            return new float3(-radius, -radius, -radius);
+        }
+    }
+
+    readonly struct SphereSDF : ISdf
+    {
+        private readonly float radius;
+
+        public SphereSDF(float radius)
+        {
+            this.radius = radius;
+        }
+
+        public float Eval(float3 pos)
+        {
+            return math.length(pos) - radius;
+        }
+
+        public float3 Max()
+        {
+            return new float3(radius, radius, radius);
+        }
+
+        public float3 Min()
+        {
+            return new float3(-radius, -radius, -radius);
+        }
+    }
+
+    readonly struct TransformSDF<TSdf> : ISdf
+        where TSdf : struct, ISdf
+    {
+        private readonly float4x4 transform;
+        private readonly float4x4 invTransform;
+        private readonly TSdf sdf;
+
+        public TransformSDF(float4x4 transform, TSdf sdf)
+        {
+            this.invTransform = math.inverse(transform);
+            this.transform = transform;
+            this.sdf = sdf;
+        }
+
+        public TransformSDF(float4x4 transform, float4x4 invTransform, TSdf sdf)
+        {
+            this.invTransform = invTransform;
+            this.transform = transform;
+            this.sdf = sdf;
+        }
+
+        public float Eval(float3 pos)
+        {
+            float3 point = math.mul(invTransform, new float4(pos, 1.0f)).xyz;
+            return sdf.Eval(point);
+        }
+
+        public float3 Max()
+        {
+            float3 min = sdf.Min();
+            float3 max = sdf.Max();
+            float3 worldMax = new float3(float.MinValue, float.MinValue, float.MinValue);
+            for (int mx = 0; mx < 2; mx++)
             {
-                for (int mz = 0; mz < 2; mz++)
+                for (int my = 0; my < 2; my++)
                 {
-                    Vector3 corner = this.transform.MultiplyPoint(new Vector3(
-                        mx == 0 ? min.x : max.x,
-                        my == 0 ? min.y : max.y,
-                        mz == 0 ? min.z : max.z
-                        ));
-                    if(corner.x > worldMax.x)
+                    for (int mz = 0; mz < 2; mz++)
                     {
-                        worldMax.x = corner.x;
-                    }
-                    if (corner.y > worldMax.y)
-                    {
-                        worldMax.y = corner.y;
-                    }
-                    if (corner.z > worldMax.z)
-                    {
-                        worldMax.z = corner.z;
+                        float3 corner = math.mul(transform, new float4(
+                            mx == 0 ? min.x : max.x,
+                            my == 0 ? min.y : max.y,
+                            mz == 0 ? min.z : max.z,
+                            1.0f
+                            )).xyz;
+                        if (corner.x > worldMax.x)
+                        {
+                            worldMax.x = corner.x;
+                        }
+                        if (corner.y > worldMax.y)
+                        {
+                            worldMax.y = corner.y;
+                        }
+                        if (corner.z > worldMax.z)
+                        {
+                            worldMax.z = corner.z;
+                        }
                     }
                 }
             }
+            return worldMax;
         }
-        return worldMax;
-    }
 
-    public Vector3 Min()
-    {
-        Vector3 min = this.sdf.Min();
-        Vector3 max = this.sdf.Max();
-        Vector3 worldMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-        for (int mx = 0; mx < 2; mx++)
+        public float3 Min()
         {
-            for (int my = 0; my < 2; my++)
+            float3 min = sdf.Min();
+            float3 max = sdf.Max();
+            float3 worldMin = new float3(float.MaxValue, float.MaxValue, float.MaxValue);
+            for (int mx = 0; mx < 2; mx++)
             {
-                for (int mz = 0; mz < 2; mz++)
+                for (int my = 0; my < 2; my++)
                 {
-                    Vector3 corner = this.transform.MultiplyPoint(new Vector3(
-                        mx == 0 ? min.x : max.x,
-                        my == 0 ? min.y : max.y,
-                        mz == 0 ? min.z : max.z
-                        ));
-                    if (corner.x < worldMin.x)
+                    for (int mz = 0; mz < 2; mz++)
                     {
-                        worldMin.x = corner.x;
-                    }
-                    if (corner.y < worldMin.y)
-                    {
-                        worldMin.y = corner.y;
-                    }
-                    if (corner.z < worldMin.z)
-                    {
-                        worldMin.z = corner.z;
+                        Vector3 corner = math.mul(transform, new float4(
+                            mx == 0 ? min.x : max.x,
+                            my == 0 ? min.y : max.y,
+                            mz == 0 ? min.z : max.z,
+                            1.0f
+                            )).xyz;
+                        if (corner.x < worldMin.x)
+                        {
+                            worldMin.x = corner.x;
+                        }
+                        if (corner.y < worldMin.y)
+                        {
+                            worldMin.y = corner.y;
+                        }
+                        if (corner.z < worldMin.z)
+                        {
+                            worldMin.z = corner.z;
+                        }
                     }
                 }
             }
+            return worldMin;
         }
-        return worldMin;
-    }
-}
-
-sealed class ScaleSDF : ISdf
-{
-    private readonly float scale;
-    private readonly ISdf sdf;
-
-    public ScaleSDF(float scale, ISdf sdf)
-    {
-        this.scale = scale;
-        this.sdf = sdf;
     }
 
-    public double Eval(double x, double y, double z)
+    readonly struct ScaleSDF<TSdf> : ISdf
+        where TSdf : struct, ISdf
     {
-        return sdf.Eval(x / scale, y / scale, z / scale) * scale;
-    }
+        private readonly float scale;
+        private readonly TSdf sdf;
 
-    public Vector3 Max()
-    {
-        return sdf.Max() * scale;
-    }
-
-    public Vector3 Min()
-    {
-        return sdf.Min() * scale;
-    }
-}
-
-sealed class PerlinSDF : ISdf
-{
-    private readonly Vector2 sampleOffset;
-    private readonly Vector3 min, max;
-    private readonly Vector2 scale;
-    private readonly float amplitude;
-    private readonly int octaves;
-    private readonly float octaveScale, octaveAmplitude;
-
-    public PerlinSDF(Vector3 min, Vector3 max, Vector2 sampleOffset, Vector2 scale, float amplitude, int octaves, float octaveScale, float octaveAmplitude)
-    {
-        this.sampleOffset = sampleOffset;
-        this.min = min;
-        this.max = max;
-        this.scale = scale;
-        this.amplitude = amplitude;
-        this.octaves = octaves;
-        this.octaveScale = octaveScale;
-        this.octaveAmplitude = octaveAmplitude;
-    }
-
-    private float CalculateNoise(float x, float y)
-    {
-        float noise = 0.0f;
-        Vector2 scale = this.scale;
-        float amplitude = this.amplitude;
-        for (int i = 0; i < octaves; i++)
+        public ScaleSDF(float scale, TSdf sdf)
         {
-            noise += Mathf.PerlinNoise((float)x * scale.x, (float)y * scale.y) * amplitude;
-            scale *= this.octaveScale;
-            amplitude *= this.octaveAmplitude;
+            this.scale = scale;
+            this.sdf = sdf;
         }
-        return noise;
+
+        public float Eval(float3 pos)
+        {
+            return sdf.Eval(pos / scale) * scale;
+        }
+
+        public float3 Max()
+        {
+            return sdf.Max() * scale;
+        }
+
+        public float3 Min()
+        {
+            return sdf.Min() * scale;
+        }
     }
 
-    public double Eval(double x, double y, double z)
+    readonly struct PerlinSDF : ISdf
     {
-        float dx = Mathf.Abs((float)x) - (max.x - min.x);
-        float dy = Mathf.Abs((float)y) - (max.y - min.y);
-        float dz = Mathf.Abs((float)z) - (max.z - min.z);
-        float distFromBounds = new Vector3(Mathf.Max(dx, 0), Mathf.Max(dy, 0), Mathf.Max(dz, 0)).magnitude + Mathf.Min(Mathf.Max(dx, Mathf.Max(dy, dz)), 0);
-        float distFromNoise = (float)y - CalculateNoise((float)x - min.x + sampleOffset.x, (float)z - min.z + sampleOffset.y);
-        return Mathf.Max(distFromBounds, distFromNoise);
-    }
+        private readonly Vector2 sampleOffset;
+        private readonly Vector3 min, max;
+        private readonly Vector2 scale;
+        private readonly float amplitude;
+        private readonly int octaves;
+        private readonly float octaveScale, octaveAmplitude;
 
-    public Vector3 Max()
-    {
-        return max;
-    }
+        public PerlinSDF(Vector3 min, Vector3 max, Vector2 sampleOffset, Vector2 scale, float amplitude, int octaves, float octaveScale, float octaveAmplitude)
+        {
+            this.sampleOffset = sampleOffset;
+            this.min = min;
+            this.max = max;
+            this.scale = scale;
+            this.amplitude = amplitude;
+            this.octaves = octaves;
+            this.octaveScale = octaveScale;
+            this.octaveAmplitude = octaveAmplitude;
+        }
 
-    public Vector3 Min()
-    {
-        return min;
+        private float CalculateNoise(float x, float y)
+        {
+            float noise = 0.0f;
+            Vector2 scale = this.scale;
+            float amplitude = this.amplitude;
+            for (int i = 0; i < octaves; i++)
+            {
+                noise += Mathf.PerlinNoise((float)x * scale.x, (float)y * scale.y) * amplitude;
+                scale *= this.octaveScale;
+                amplitude *= this.octaveAmplitude;
+            }
+            return noise;
+        }
+
+        public float Eval(float3 pos)
+        {
+            float dx = Mathf.Abs((float)pos.x) - (max.x - min.x);
+            float dy = Mathf.Abs((float)pos.y) - (max.y - min.y);
+            float dz = Mathf.Abs((float)pos.z) - (max.z - min.z);
+            float distFromBounds = new Vector3(Mathf.Max(dx, 0), Mathf.Max(dy, 0), Mathf.Max(dz, 0)).magnitude + Mathf.Min(Mathf.Max(dx, Mathf.Max(dy, dz)), 0);
+            float distFromNoise = (float)pos.y - CalculateNoise((float)pos.x - min.x + sampleOffset.x, (float)pos.z - min.z + sampleOffset.y);
+            return Mathf.Max(distFromBounds, distFromNoise);
+        }
+
+        public float3 Max()
+        {
+            return max;
+        }
+
+        public float3 Min()
+        {
+            return min;
+        }
     }
 }

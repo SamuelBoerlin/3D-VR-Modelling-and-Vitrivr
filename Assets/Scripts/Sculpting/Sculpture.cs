@@ -1,191 +1,248 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Transform))]
-[RequireComponent(typeof(MeshRenderer))]
-public class Sculpture : MonoBehaviour
+namespace Sculpting
 {
-    [SerializeField] private int chunkSize = 16;
-    public int ChunkSize
+    [RequireComponent(typeof(Transform))]
+    [RequireComponent(typeof(MeshRenderer))]
+    public class Sculpture : MonoBehaviour
     {
-        get
+        [SerializeField] private int chunkSize = 16;
+        public int ChunkSize
         {
-            return chunkSize;
-        }
-    }
-
-    [SerializeField] private PolygonizationProperties poligonizationProperties = null;
-
-    private readonly Dictionary<ChunkPos, SculptureChunk> chunks = new Dictionary<ChunkPos, SculptureChunk>();
-
-    private MeshRenderer meshRenderer;
-
-    private Vector3 TransformPointToLocalSpace(Vector3 vec)
-    {
-        return Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale).inverse.MultiplyPoint(vec);
-    }
-
-    private Vector3 TransformDirToLocalSpace(Vector3 vec)
-    {
-        return Quaternion.Inverse(transform.rotation) * vec;
-    }
-
-    private Quaternion TransformQuatToLocalSpace(Quaternion rot)
-    {
-        return Quaternion.Inverse(transform.rotation) * rot;
-    }
-
-    public SculptureChunk GetChunk(ChunkPos pos)
-    {
-        chunks.TryGetValue(pos, out SculptureChunk chunk);
-        return chunk;
-    }
-
-    public ICollection<SculptureChunk> GetChunks()
-    {
-        return chunks.Values;
-    }
-
-    /// <summary>
-    /// Applies the specified signed distance field function to the sculpture.
-    /// The SDF is applied in local space, i.e. 1 voxel = 1 unit on the signed distance field!
-    /// </summary>
-    /// <param name="pos">World position</param>
-    /// <param name="rot">World rotation</param>
-    /// <param name="sdf">Signed distance field function</param>
-    /// <param name="material">Material to be added</param>
-    /// <param name="replace">Whether </param>
-    public void ApplySdf(Vector3 pos, Quaternion rot, ISdf sdf, int material, bool replace)
-    {
-        pos = TransformPointToLocalSpace(pos);
-        rot = TransformQuatToLocalSpace(rot);
-
-        Debug.Log("Apply sdf at: " + pos);
-
-        sdf = new TransformSDF(Matrix4x4.TRS(pos, rot, Vector3.one), sdf);
-
-        Vector3 minBound = sdf.Min();
-        Vector3 maxBound = sdf.Max();
-
-        int minX = Mathf.FloorToInt(minBound.x / chunkSize);
-        int minY = Mathf.FloorToInt(minBound.y / chunkSize);
-        int minZ = Mathf.FloorToInt(minBound.z / chunkSize);
-
-        int maxX = Mathf.FloorToInt(maxBound.x / chunkSize);
-        int maxY = Mathf.FloorToInt(maxBound.y / chunkSize);
-        int maxZ = Mathf.FloorToInt(maxBound.z / chunkSize);
-
-        for (int cx = minX; cx <= maxX; cx++)
-        {
-            for (int cy = minY; cy <= maxY; cy++)
+            get
             {
-                for (int cz = minZ; cz <= maxZ; cz++)
-                {
-                    ChunkPos chunkPos = ChunkPos.FromChunk(cx, cy, cz);
-
-                    chunks.TryGetValue(chunkPos, out SculptureChunk chunk);
-                    if (chunk == null)
-                    {
-                        chunks[chunkPos] = chunk = new SculptureChunk(this, chunkPos, chunkSize);
-                    }
-
-                    chunk.ApplySdf(-cx * chunkSize, -cy * chunkSize, -cz * chunkSize, sdf, material, replace);
-                }
+                return chunkSize;
             }
         }
-    }
 
-    public readonly struct RayCastResult
-    {
-        public readonly Vector3 pos;
-        public readonly Vector3 sidePos;
-        public readonly SculptureChunk chunk;
-
-        public RayCastResult(Vector3 pos, Vector3 sidePos, SculptureChunk chunk)
+        [SerializeField] private CMSProperties cmsProperties = null;
+        public CMSProperties CMSProperties
         {
-            this.pos = pos;
-            this.sidePos = sidePos;
-            this.chunk = chunk;
-        }
-    }
-
-    public bool RayCast(Vector3 pos, Vector3 dir, float dst, out RayCastResult result)
-    {
-        pos = TransformPointToLocalSpace(pos);
-        dir = TransformDirToLocalSpace(dir);
-
-        const float step = 0.1f;
-
-        int prevX = int.MaxValue;
-        int prevY = int.MaxValue;
-        int prevZ = int.MaxValue;
-
-        Vector3 stepOffset = dir.normalized * step;
-
-        for (int i = 0; i < dst / step; i++)
-        {
-            int x = (int)Mathf.Floor(pos.x);
-            int y = (int)Mathf.Floor(pos.y);
-            int z = (int)Mathf.Floor(pos.z);
-
-            if (x != prevX || y != prevY || z != prevZ)
+            get
             {
-                for (int zo = 0; zo < 2; zo++)
+                return cmsProperties;
+            }
+        }
+
+        private readonly Dictionary<ChunkPos, SculptureChunk> chunks = new Dictionary<ChunkPos, SculptureChunk>();
+
+        private MeshRenderer meshRenderer;
+
+        private Vector3 TransformPointToLocalSpace(Vector3 vec)
+        {
+            return Matrix4x4.TRS(-transform.position, transform.rotation, transform.lossyScale).inverse.MultiplyPoint(vec);
+        }
+
+        private Vector3 TransformDirToLocalSpace(Vector3 vec)
+        {
+            return Quaternion.Inverse(transform.rotation) * vec;
+        }
+
+        private Quaternion TransformQuatToLocalSpace(Quaternion rot)
+        {
+            return Quaternion.Inverse(transform.rotation) * rot;
+        }
+
+        public SculptureChunk GetChunk(ChunkPos pos)
+        {
+            chunks.TryGetValue(pos, out SculptureChunk chunk);
+            return chunk;
+        }
+
+        /// <summary>
+        /// Applies the specified signed distance field function to the sculpture.
+        /// The SDF is applied in local space, i.e. 1 voxel = 1 unit on the signed distance field!
+        /// </summary>
+        /// <param name="pos">World position</param>
+        /// <param name="rot">World rotation</param>
+        /// <param name="sdf">Signed distance field function</param>
+        /// <param name="material">Material to be added</param>
+        /// <param name="replace">Whether </param>
+        public void ApplySdf<TSdf>(Vector3 pos, Quaternion rot, TSdf sdf, int material, bool replace)
+            where TSdf : struct, ISdf
+        {
+            pos = TransformPointToLocalSpace(pos);
+            rot = TransformQuatToLocalSpace(rot);
+
+            var transformedSdf = new TransformSDF<TSdf>(Matrix4x4.TRS(pos, rot, Vector3.one), sdf);
+
+            Vector3 minBound = transformedSdf.Min();
+            Vector3 maxBound = transformedSdf.Max();
+
+            int minX = Mathf.FloorToInt(minBound.x / chunkSize);
+            int minY = Mathf.FloorToInt(minBound.y / chunkSize);
+            int minZ = Mathf.FloorToInt(minBound.z / chunkSize);
+
+            int maxX = Mathf.FloorToInt(maxBound.x / chunkSize);
+            int maxY = Mathf.FloorToInt(maxBound.y / chunkSize);
+            int maxZ = Mathf.FloorToInt(maxBound.z / chunkSize);
+
+            var handles = new List<SculptureChunk.FinalizeChange>();
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            //Schedule all jobs
+            for (int cx = minX; cx <= maxX; cx++)
+            {
+                for (int cy = minY; cy <= maxY; cy++)
                 {
-                    for (int yo = 0; yo < 2; yo++)
+                    for (int cz = minZ; cz <= maxZ; cz++)
                     {
-                        for (int xo = 0; xo < 2; xo++)
+                        ChunkPos chunkPos = ChunkPos.FromChunk(cx, cy, cz);
+
+                        chunks.TryGetValue(chunkPos, out SculptureChunk chunk);
+                        if (chunk == null)
                         {
-                            int bx = x + xo;
-                            int by = y + yo;
-                            int bz = z + zo;
+                            chunks[chunkPos] = chunk = new SculptureChunk(this, chunkPos, chunkSize);
+                        }
 
-                            SculptureChunk chunk = GetChunk(ChunkPos.FromVoxel(bx, by, bz, chunkSize));
+                        handles.Add(chunk.ScheduleSdf(-cx * chunkSize, -cy * chunkSize, -cz * chunkSize, transformedSdf, material, replace));
+                    }
+                }
+            }
 
-                            if (chunk != null)
+            //Wait and finalize jobs
+            foreach(var handle in handles)
+            {
+                handle();
+            }
+
+            watch.Stop();
+
+            string text = "Applied SDF to " + handles.Count + " voxel chunks in " + watch.ElapsedMilliseconds + "ms. Avg: " + (watch.ElapsedMilliseconds / (float)handles.Count) + "ms.";
+            Debug.Log(text);
+        }
+
+        public readonly struct RayCastResult
+        {
+            public readonly Vector3 pos;
+            public readonly Vector3 sidePos;
+            public readonly SculptureChunk chunk;
+
+            public RayCastResult(Vector3 pos, Vector3 sidePos, SculptureChunk chunk)
+            {
+                this.pos = pos;
+                this.sidePos = sidePos;
+                this.chunk = chunk;
+            }
+        }
+
+        public bool RayCast(Vector3 pos, Vector3 dir, float dst, out RayCastResult result)
+        {
+            pos = TransformPointToLocalSpace(pos);
+            dir = TransformDirToLocalSpace(dir);
+
+            const float step = 0.1f;
+
+            int prevX = int.MaxValue;
+            int prevY = int.MaxValue;
+            int prevZ = int.MaxValue;
+
+            Vector3 stepOffset = dir.normalized * step;
+
+            for (int i = 0; i < dst / step; i++)
+            {
+                int x = (int)Mathf.Floor(pos.x);
+                int y = (int)Mathf.Floor(pos.y);
+                int z = (int)Mathf.Floor(pos.z);
+
+                if (x != prevX || y != prevY || z != prevZ)
+                {
+                    for (int zo = 0; zo < 2; zo++)
+                    {
+                        for (int yo = 0; yo < 2; yo++)
+                        {
+                            for (int xo = 0; xo < 2; xo++)
                             {
-                                int material = chunk.GetMaterial(((bx % chunkSize) + chunkSize) % chunkSize, ((by % chunkSize) + chunkSize) % chunkSize, ((bz % chunkSize) + chunkSize) % chunkSize);
-                                if (material != 0)
+                                int bx = x + xo;
+                                int by = y + yo;
+                                int bz = z + zo;
+
+                                SculptureChunk chunk = GetChunk(ChunkPos.FromVoxel(bx, by, bz, chunkSize));
+
+                                if (chunk != null)
                                 {
-                                    result = new RayCastResult(new Vector3(x, y, z), new Vector3(prevX, prevY, prevZ), chunk);
-                                    return true;
+                                    int material = chunk.GetMaterial(((bx % chunkSize) + chunkSize) % chunkSize, ((by % chunkSize) + chunkSize) % chunkSize, ((bz % chunkSize) + chunkSize) % chunkSize);
+                                    if (material != 0)
+                                    {
+                                        result = new RayCastResult(new Vector3(x, y, z), new Vector3(prevX, prevY, prevZ), chunk);
+                                        return true;
+                                    }
                                 }
                             }
                         }
                     }
+
+                    prevX = x;
+                    prevY = y;
+                    prevZ = z;
                 }
 
-                prevX = x;
-                prevY = y;
-                prevZ = z;
+                pos += stepOffset;
             }
 
-            pos += stepOffset;
+            result = new RayCastResult(Vector3.zero, Vector3.zero, null);
+            return false;
         }
 
-        result = new RayCastResult(Vector3.zero, Vector3.zero, null);
-        return false;
-    }
-
-    void Start()
-    {
-        meshRenderer = gameObject.GetComponent<MeshRenderer>();
-    }
-
-    void Update()
-    {
-        foreach (ChunkPos pos in chunks.Keys)
+        public ICollection<SculptureChunk> GetChunks()
         {
-            SculptureChunk chunk = chunks[pos];
+            return chunks.Values;
+        }
 
-            if (chunk.mesh == null || chunk.NeedsRebuild)
+        void Start()
+        {
+            meshRenderer = gameObject.GetComponent<MeshRenderer>();
+        }
+
+        void Update()
+        {
+            var handles = new List<SculptureChunk.FinalizeBuild>();
+
+            System.Diagnostics.Stopwatch watch = null;
+
+            //Schedule all rebuild jobs
+            foreach (ChunkPos pos in chunks.Keys)
             {
-                chunk.Build();
+                SculptureChunk chunk = chunks[pos];
+
+                if (chunk.mesh == null || chunk.NeedsRebuild)
+                {
+                    if(watch == null)
+                    {
+                        watch = System.Diagnostics.Stopwatch.StartNew();
+                    }
+                    handles.Add(chunk.ScheduleBuild());
+                }
+
+                if(chunk.mesh != null)
+                {
+                    Graphics.DrawMesh(chunk.mesh, Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale) * Matrix4x4.Translate(new Vector3(pos.x * chunkSize, pos.y * chunkSize, pos.z * chunkSize)), meshRenderer.material, 0);
+                }
             }
-            else
+
+            //Wait and finalize jobs
+            foreach (var handle in handles)
             {
-                Graphics.DrawMesh(chunk.mesh, Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale) * Matrix4x4.Translate(new Vector3(pos.x * chunkSize, pos.y * chunkSize, pos.z * chunkSize)), meshRenderer.material, 0);
+                handle();
             }
+
+            if(watch != null) { 
+                watch.Stop();
+
+                string text = "Polygonized " + handles.Count + " voxel chunks in " + watch.ElapsedMilliseconds + "ms. Avg: " + (watch.ElapsedMilliseconds / (float)handles.Count) + "ms.";
+                Debug.Log(text);
+            }
+        }
+
+        void OnApplicationQuit()
+        {
+            foreach(var chunk in chunks.Values)
+            {
+                chunk.Dispose();
+            }
+            chunks.Clear();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using UnityEngine;
+using Sculpting;
 
 public class SculptureToJsonConverter
 {
@@ -13,7 +13,7 @@ public class SculptureToJsonConverter
             var mesh = chunk.mesh;
             if (mesh != null)
             {
-                for(int i = 0; i < mesh.triangles.Length - 3; i++)
+                for (int i = 0; i < mesh.triangles.Length - 3; i++)
                 {
                     var index = mesh.triangles[i];
                     var pos = mesh.vertices[index];

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Sculpting;
 using UnityEngine;
 
 public class GuiManager : MonoBehaviour
@@ -33,7 +32,7 @@ public class GuiManager : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetButton(guiInput))
+        if (Input.GetButton(guiInput))
         {
             SpawnGui();
         }
@@ -43,19 +42,19 @@ public class GuiManager : MonoBehaviour
         }
 
         bool isTriggerDown = Input.GetAxis(triggerInput) > 0.5f;
-        if(wasTriggerDown != isTriggerDown)
+        if (wasTriggerDown != isTriggerDown)
         {
-            if(openGui == null && isTriggerDown)
+            if (openGui == null && isTriggerDown)
             {
                 GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
                 if (sculpture != null)
                 {
                     Sculpture script = sculpture.GetComponent<Sculpture>();
 
-                    if(script != null)
+                    if (script != null)
                     {
                         int material;
-                        if(opType == OperationType.Union)
+                        if (opType == OperationType.Union)
                         {
                             material = 1;
                         }
@@ -64,19 +63,16 @@ public class GuiManager : MonoBehaviour
                             material = 0;
                         }
 
-                        ISdf shape;
-                        if(brushType == BrushType.Cube)
+                        if (brushType == BrushType.Cube)
                         {
-                            shape = new BoxSDF(8.0f);
+                            var shape = new ScaleSDF<BoxSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new BoxSDF(8.0f));
+                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                         }
                         else
                         {
-                            shape = new SphereSDF(8.0f);
+                            var shape = new ScaleSDF<SphereSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new SphereSDF(8.0f));
+                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                         }
-
-                        shape = new ScaleSDF(1.0f / (sculpture.transform.localScale.x / startScale), shape);
-
-                        script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                     }
                 }
             }
@@ -87,7 +83,7 @@ public class GuiManager : MonoBehaviour
 
     private void SpawnGui()
     {
-        if(openGui == null)
+        if (openGui == null)
         {
             GameObject gui = Instantiate(guiPrefab);
 
@@ -107,7 +103,7 @@ public class GuiManager : MonoBehaviour
 
     private void RemoveGui()
     {
-        if(openGui != null)
+        if (openGui != null)
         {
             Destroy(openGui);
             openGui = null;

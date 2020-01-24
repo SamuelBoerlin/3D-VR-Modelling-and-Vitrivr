@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Sculpting;
 using UnityEngine;
 
 public class GrabberLogic : MonoBehaviour
@@ -43,11 +42,11 @@ public class GrabberLogic : MonoBehaviour
             }
 
             QueryResultObject[] queryResults = FindObjectsOfType<QueryResultObject>();
-            foreach(var queryResultObject in queryResults)
+            foreach (var queryResultObject in queryResults)
             {
                 var collider = queryResultObject.GetComponent<Collider>();
                 Debug.Log(queryResultObject);
-                if(collider != null)
+                if (collider != null)
                 {
                     Debug.Log((collider.ClosestPoint(transform.position) - transform.position).magnitude);
                     if ((collider.ClosestPoint(transform.position) - transform.position).magnitude < 0.1f)
@@ -107,7 +106,7 @@ public class GrabberLogic : MonoBehaviour
 
                 child.transform.localScale = Vector3.one * newScale;
                 child.transform.localPosition = initialScalePosition + initialScalePosition * (newScale - initialScale) / initialScale; // * newScale - initialScalePosition * newScale;
-                
+
 
             }
             else
