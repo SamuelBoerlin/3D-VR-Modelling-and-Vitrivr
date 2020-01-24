@@ -68,6 +68,16 @@ public class GuiManager : MonoBehaviour
                             var shape = new ScaleSDF<BoxSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new BoxSDF(8.0f));
                             script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
                         }
+                        else if(brushType == BrushType.Cylinder)
+                        {
+                            var shape = new ScaleSDF<CylinderSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new CylinderSDF(8.0f, 8.0f));
+                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                        }
+                        else if(brushType == BrushType.Pyramid)
+                        {
+                            var shape = new ScaleSDF<PyramidSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new PyramidSDF(16.0f, 16.0f));
+                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                        }
                         else
                         {
                             var shape = new ScaleSDF<SphereSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new SphereSDF(8.0f));

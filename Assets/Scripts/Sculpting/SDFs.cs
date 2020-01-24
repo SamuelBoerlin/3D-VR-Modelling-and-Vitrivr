@@ -84,6 +84,85 @@ namespace Sculpting
         }
     }
 
+    readonly struct CylinderSDF : ISdf
+    {
+        private readonly float height, radius;
+
+        public CylinderSDF(float height, float radius)
+        {
+            this.height = height;
+            this.radius = radius;
+        }
+
+        public float Eval(float3 pos)
+        {
+            var d = math.abs(new float2(math.length(pos.xz), pos.y)) - new float2(radius, height);
+            return math.min(math.max(d.x, d.y), 0.0f) + math.length(math.max(d, 0.0f));
+        }
+
+        public float3 Max()
+        {
+            return new float3(radius, height, radius);
+        }
+
+        public float3 Min()
+        {
+            return new float3(-radius, -height, -radius);
+        }
+    }
+
+    readonly struct PyramidSDF : ISdf
+    {
+        private readonly float h, b;
+
+        public PyramidSDF(float h, float b)
+        {
+            this.h = (h + 0.1f) / (b + 0.1f);
+            this.b = (b + 0.1f);
+        }
+
+        public float Eval(float3 p)
+        {
+            p = p / this.b;
+
+            float m2 = h * h + 0.25f;
+
+            // symmetry
+            /*p.xz = math.abs(p.xz);
+            p.xz = (p.z > p.x) ? p.zx : p.xz;
+            p.xz -= 0.5f;*/
+            var a1 = math.abs(p.xz);
+            p = new float3(a1.x, p.y, a1.y);
+            var a2 = (p.z > p.x) ? p.zx : p.xz;
+            p = new float3(a2.x, p.y, a2.y);
+            p = p - new float3(0.5f, 0, 0.5f);
+
+            // project into face plane (2D)
+            var q = new float3(p.z, h * p.y - 0.5f * p.x, h * p.x + 0.5f * p.y);
+
+            float s = math.max(-q.x, 0.0f);
+            float t = math.clamp((q.y - 0.5f * p.z) / (m2 + 0.25f), 0.0f, 1.0f);
+
+            float a = m2 * (q.x + s) * (q.x + s) + q.y * q.y;
+            float b = m2 * (q.x + 0.5f * t) * (q.x + 0.5f * t) + (q.y - m2 * t) * (q.y - m2 * t);
+
+            float d2 = math.min(q.y, -q.x * m2 - q.y * 0.5f) > 0.0f ? 0.0f : math.min(a, b);
+
+            // recover 3D and scale, and add sign
+            return math.max(math.sqrt((d2 + q.z * q.z) / m2) * math.sign(math.max(q.z, -p.y)), -(p.y - 0.1f)) * this.b;
+        }
+
+        public float3 Max()
+        {
+            return new float3(h * b + 10, h * b + 10, h * b + 10);
+        }
+
+        public float3 Min()
+        {
+            return new float3(-h * b - 10, -h * b - 10, -h * b - 10);
+        }
+    }
+
     readonly struct TransformSDF<TSdf> : ISdf
         where TSdf : struct, ISdf
     {
