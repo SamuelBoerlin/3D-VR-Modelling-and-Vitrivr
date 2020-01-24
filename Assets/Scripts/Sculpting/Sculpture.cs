@@ -186,7 +186,7 @@ namespace Sculpting
             return false;
         }
 
-        public ICollection<SculptureChunk> GetChunks()
+        public Dictionary<ChunkPos, SculptureChunk>.ValueCollection GetChunks()
         {
             return chunks.Values;
         }

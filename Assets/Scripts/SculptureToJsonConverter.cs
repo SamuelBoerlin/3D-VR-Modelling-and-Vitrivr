@@ -13,10 +13,13 @@ public class SculptureToJsonConverter
             var mesh = chunk.mesh;
             if (mesh != null)
             {
-                for (int i = 0; i < mesh.triangles.Length - 3; i++)
+                var triangles = mesh.triangles;
+                var vertices = mesh.vertices;
+
+                for (int i = 0; i < triangles.Length - 3; i++)
                 {
-                    var index = mesh.triangles[i];
-                    var pos = mesh.vertices[index];
+                    var index = triangles[i];
+                    var pos = vertices[index];
                     jsonVertices.Add(pos.x + chunk.Pos.x * chunk.ChunkSize);
                     jsonVertices.Add(pos.y + chunk.Pos.y * chunk.ChunkSize);
                     jsonVertices.Add(pos.z + chunk.Pos.z * chunk.ChunkSize);
