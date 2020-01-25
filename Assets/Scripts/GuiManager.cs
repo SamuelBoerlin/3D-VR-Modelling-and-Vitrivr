@@ -75,6 +75,8 @@ public class GuiManager : MonoBehaviour
         }
         wasSmearToggleDown = isSmearToggleDown;
 
+        var brushPosition = pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f);
+
         GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
         if (sculpture != null)
         {
@@ -88,22 +90,22 @@ public class GuiManager : MonoBehaviour
             if (brushType == BrushType.Cube)
             {
                 var shape = new ScaleSDF<BoxSDF>(1.0f / (sculpture.transform.localScale.x / startScale) * sculpture.transform.lossyScale.x, new BoxSDF(8.0f));
-                previewRenderer.Render(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, previewColor);
+                previewRenderer.Render(brushPosition, pointerHandTransform.rotation, shape, previewColor);
             }
             else if (brushType == BrushType.Cylinder)
             {
                 var shape = new ScaleSDF<CylinderSDF>(1.0f / (sculpture.transform.localScale.x / startScale) * sculpture.transform.lossyScale.x, new CylinderSDF(8.0f, 8.0f));
-                previewRenderer.Render(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, previewColor);
+                previewRenderer.Render(brushPosition, pointerHandTransform.rotation, shape, previewColor);
             }
             else if (brushType == BrushType.Pyramid)
             {
                 var shape = new ScaleSDF<PyramidSDF>(1.0f / (sculpture.transform.localScale.x / startScale) * sculpture.transform.lossyScale.x, new PyramidSDF(16.0f, 16.0f));
-                previewRenderer.Render(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, previewColor);
+                previewRenderer.Render(brushPosition, pointerHandTransform.rotation, shape, previewColor);
             }
             else
             {
                 var shape = new ScaleSDF<SphereSDF>(1.0f / (sculpture.transform.localScale.x / startScale) * sculpture.transform.lossyScale.x, new SphereSDF(8.0f));
-                previewRenderer.Render(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, previewColor);
+                previewRenderer.Render(brushPosition, pointerHandTransform.rotation, shape, previewColor);
             }
         }
 
@@ -133,22 +135,22 @@ public class GuiManager : MonoBehaviour
                         if (brushType == BrushType.Cube)
                         {
                             var shape = new ScaleSDF<BoxSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new BoxSDF(8.0f));
-                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                            script.ApplySdf(brushPosition, pointerHandTransform.rotation, shape, material, false);
                         }
                         else if (brushType == BrushType.Cylinder)
                         {
                             var shape = new ScaleSDF<CylinderSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new CylinderSDF(8.0f, 8.0f));
-                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                            script.ApplySdf(brushPosition, pointerHandTransform.rotation, shape, material, false);
                         }
                         else if (brushType == BrushType.Pyramid)
                         {
                             var shape = new ScaleSDF<PyramidSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new PyramidSDF(16.0f, 16.0f));
-                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                            script.ApplySdf(brushPosition, pointerHandTransform.rotation, shape, material, false);
                         }
                         else
                         {
                             var shape = new ScaleSDF<SphereSDF>(1.0f / (sculpture.transform.localScale.x / startScale), new SphereSDF(8.0f));
-                            script.ApplySdf(pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f), pointerHandTransform.rotation, shape, material, false);
+                            script.ApplySdf(brushPosition, pointerHandTransform.rotation, shape, material, false);
                         }
                     }
                 }
