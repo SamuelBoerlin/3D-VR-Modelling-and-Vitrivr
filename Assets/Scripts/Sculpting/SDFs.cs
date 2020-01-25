@@ -29,6 +29,16 @@ namespace Sculpting
         {
             return sdf.Min() - offset;
         }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.identity;
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
+        }
     }
 
     readonly struct BoxSDF : ISdf
@@ -57,6 +67,16 @@ namespace Sculpting
         {
             return new float3(-radius, -radius, -radius);
         }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.Scale(Vector3.one * radius);
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
+        }
     }
 
     readonly struct SphereSDF : ISdf
@@ -81,6 +101,16 @@ namespace Sculpting
         public float3 Min()
         {
             return new float3(-radius, -radius, -radius);
+        }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.Scale(Vector3.one * radius);
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
         }
     }
 
@@ -109,21 +139,35 @@ namespace Sculpting
         {
             return new float3(-radius, -height, -radius);
         }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.Scale(new Vector3(radius, height, radius));
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
+        }
     }
 
     readonly struct PyramidSDF : ISdf
     {
         private readonly float h, b;
+        private readonly float h2, b2;
 
         public PyramidSDF(float h, float b)
         {
-            this.h = (h + 0.1f) / (b + 0.1f);
-            this.b = (b + 0.1f);
+            this.b2 = b;
+            this.h2 = h / b;
+            this.b = b * 1.1f;
+            this.h = h / this.b + 0.1f;
         }
 
         public float Eval(float3 p)
         {
             p = p / this.b;
+            p = p + new float3(0, 0.1f, 0);
 
             float m2 = h * h + 0.25f;
 
@@ -154,12 +198,22 @@ namespace Sculpting
 
         public float3 Max()
         {
-            return new float3(h * b + 10, h * b + 10, h * b + 10);
+            return new float3(h2 * b2, h2 * b2, h2 * b2);
         }
 
         public float3 Min()
         {
-            return new float3(-h * b - 10, -h * b - 10, -h * b - 10);
+            return new float3(-h2 * b2, -h2 * b2, -h2 * b2);
+        }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.Scale(new Vector3(h2 * b2, h2 * b2, h2 * b2));
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
         }
     }
 
@@ -259,6 +313,16 @@ namespace Sculpting
             }
             return worldMin;
         }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return transform;
+        }
+
+        public ISdf RenderChild()
+        {
+            return sdf;
+        }
     }
 
     readonly struct ScaleSDF<TSdf> : ISdf
@@ -286,6 +350,16 @@ namespace Sculpting
         public float3 Min()
         {
             return sdf.Min() * scale;
+        }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.Scale(new Vector3(scale, scale, scale));
+        }
+
+        public ISdf RenderChild()
+        {
+            return sdf;
         }
     }
 
@@ -342,6 +416,16 @@ namespace Sculpting
         public float3 Min()
         {
             return min;
+        }
+
+        public Matrix4x4? RenderingTransform()
+        {
+            return Matrix4x4.identity;
+        }
+
+        public ISdf RenderChild()
+        {
+            return null;
         }
     }
 }

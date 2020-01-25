@@ -5,27 +5,10 @@ using Unity.Mathematics;
 using UnityEngine;
 using VoxelPolygonizer;
 using VoxelPolygonizer.CMS;
+using static VoxelPolygonizer.VoxelMeshTessellation;
 
 namespace Sculpting
 {
-    public struct MaterialColors : VoxelMeshTessellation.IMaterialColorMap
-    {
-        public Color32 GetColor(int material)
-        {
-            switch (material)
-            {
-                default:
-                    return Color.white;
-                case 1:
-                    return Color.white;
-                case 2:
-                    return Color.green;
-                case 3:
-                    return Color.blue;
-            }
-        }
-    }
-
     [BurstCompile]
     public struct ChunkBuildJob : IJob
     {
@@ -38,6 +21,14 @@ namespace Sculpting
         public NativeList<int> MeshTriangles;
         public NativeList<Color32> MeshColors;
         public NativeList<int> MeshMaterials;
+
+        private struct MaterialColors : IMaterialColorMap
+        {
+            public Color32 GetColor(int material)
+            {
+                return Color.white;
+            }
+        }
 
         public void Execute()
         {

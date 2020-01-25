@@ -3,7 +3,7 @@ using Unity.Collections;
 using UnityEngine;
 using VoxelPolygonizer.CMS;
 
-[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/CMSProperties", order = 1)]
+[CreateAssetMenu(fileName = "CMSProperties", menuName = "ScriptableObjects/CMSProperties", order = 1)]
 public class CMSProperties : ScriptableObject
 {
     [SerializeField] private DataStruct data = DataStruct.Default();

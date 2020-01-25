@@ -31,12 +31,12 @@ namespace Sculpting
 
         private Vector3 TransformPointToLocalSpace(Vector3 vec)
         {
-            return Matrix4x4.TRS(-transform.position, transform.rotation, transform.lossyScale).inverse.MultiplyPoint(vec);
+            return transform.InverseTransformPoint(vec);
         }
 
         private Vector3 TransformDirToLocalSpace(Vector3 vec)
         {
-            return Quaternion.Inverse(transform.rotation) * vec;
+            return transform.InverseTransformDirection(vec);
         }
 
         private Quaternion TransformQuatToLocalSpace(Quaternion rot)
@@ -64,6 +64,8 @@ namespace Sculpting
         {
             pos = TransformPointToLocalSpace(pos);
             rot = TransformQuatToLocalSpace(rot);
+
+            Debug.Log("Apply sdf at: " + pos);
 
             var transformedSdf = new TransformSDF<TSdf>(Matrix4x4.TRS(pos, rot, Vector3.one), sdf);
 
@@ -159,7 +161,7 @@ namespace Sculpting
                                 int by = y + yo;
                                 int bz = z + zo;
 
-                                SculptureChunk chunk = GetChunk(ChunkPos.FromVoxel(bx, by, bz, chunkSize));
+                                var chunk = GetChunk(ChunkPos.FromVoxel(bx, by, bz, chunkSize));
 
                                 if (chunk != null)
                                 {

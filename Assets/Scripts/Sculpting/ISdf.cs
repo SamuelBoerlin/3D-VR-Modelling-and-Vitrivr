@@ -1,4 +1,6 @@
-﻿using Unity.Mathematics;
+﻿using Unity.Burst;
+using Unity.Mathematics;
+using UnityEngine;
 
 namespace Sculpting
 {
@@ -7,5 +9,11 @@ namespace Sculpting
         float Eval(float3 pos);
         float3 Min();
         float3 Max();
+
+        [BurstDiscard]
+        Matrix4x4? RenderingTransform();
+
+        [BurstDiscard]
+        ISdf RenderChild();
     }
 }
