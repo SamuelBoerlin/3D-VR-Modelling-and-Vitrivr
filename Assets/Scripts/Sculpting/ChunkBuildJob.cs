@@ -26,7 +26,27 @@ namespace Sculpting
         {
             public Color32 GetColor(int material)
             {
-                return Color.white;
+                switch(material)
+                {
+                    default:
+                    case 1:
+                        return Color.white;
+                    case 2:
+                        //red
+                        return new Color(255 / 255.0f, 116 / 255.0f, 112 / 255.0f);
+                    case 3:
+                        //blue
+                        return new Color(112 / 255.0f, 119 / 255.0f, 255 / 255.0f);
+                    case 4:
+                        //green
+                        return new Color(112 / 255.0f, 255 / 255.0f, 115 / 255.0f);
+                    case 5:
+                        //violet
+                        return new Color(173 / 255.0f, 112 / 255.0f, 255 / 255.0f);
+                    case 6:
+                        //yellow
+                        return new Color(255 / 255.0f, 255 / 255.0f, 112 / 255.0f);
+                }
             }
         }
 

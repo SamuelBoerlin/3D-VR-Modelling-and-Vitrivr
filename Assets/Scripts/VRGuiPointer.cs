@@ -12,7 +12,7 @@ public class VRGuiPointer : MonoBehaviour
 
     [SerializeField] public Camera camera = null;
 
-    [SerializeField] public GuiManager guiManager = null;
+    [SerializeField] public InteractionManager guiManager = null;
 
     private GraphicRaycaster rayCaster = null;
 

@@ -1,5 +1,6 @@
 ﻿using Sculpting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GrabberLogic : MonoBehaviour
 {
@@ -15,7 +16,10 @@ public class GrabberLogic : MonoBehaviour
 
     private Vector3 lastGrabberPos;
 
-    private bool isScaling = false;
+    public bool IsScaling {
+        get;
+        private set;
+    }
     private Vector3 initialScalePosition;
     private float initialScale;
     private float initialScaleDistance;
@@ -86,13 +90,13 @@ public class GrabberLogic : MonoBehaviour
             if (Input.GetButton(scaleInput))
             {
                 float handDistance = Vector3.Distance(transform.position, scaleHandTransform.position);
-                Debug.Log(isScaling);
-                if (!isScaling)
+                Debug.Log(IsScaling);
+                if (!IsScaling)
                 {
                     initialScalePosition = child.transform.localPosition;
                     initialScale = child.transform.localScale.x;
                     initialScaleDistance = handDistance;
-                    isScaling = true;
+                    IsScaling = true;
 
                     Debug.Log("initPos: " + initialScalePosition);
                 }
@@ -111,7 +115,7 @@ public class GrabberLogic : MonoBehaviour
             }
             else
             {
-                isScaling = false;
+                IsScaling = false;
             }
         }
 

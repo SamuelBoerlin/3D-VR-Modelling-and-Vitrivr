@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum OperationType
 {
-    Union, Difference
+    Union, Difference, Replace
 }
 
 public class SetOperationMode : MonoBehaviour

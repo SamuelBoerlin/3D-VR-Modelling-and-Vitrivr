@@ -1,6 +1,5 @@
 ﻿using Cineast_OpenAPI_Implementation;
 using IO.Swagger.Model;
-using Sculpting;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -158,12 +157,10 @@ public class UnityCineastApi : MonoBehaviour
         {
             testSettings.runTest = false;
 
-            /*using (Stream stream = new MemoryStream(testSettings.testModel.bytes))
+            using (Stream stream = new MemoryStream(testSettings.testModel.bytes))
             {
                 StartQuery(ObjToJsonConverter.Convert(stream));
-            }*/
-            GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
-            StartQuery(SculptureToJsonConverter.Convert(sculpture.GetComponent<Sculpture>()));
+            }
         }
     }
 
