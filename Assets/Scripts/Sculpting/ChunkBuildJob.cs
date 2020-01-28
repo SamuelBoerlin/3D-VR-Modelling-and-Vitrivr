@@ -26,7 +26,7 @@ namespace Sculpting
         {
             public Color32 GetColor(int material)
             {
-                switch(material)
+                switch (material)
                 {
                     default:
                     case 1:
@@ -41,8 +41,8 @@ namespace Sculpting
                         //green
                         return new Color(112 / 255.0f, 255 / 255.0f, 115 / 255.0f);
                     case 5:
-                        //violet
-                        return new Color(173 / 255.0f, 112 / 255.0f, 255 / 255.0f);
+                        //black
+                        return new Color(60 / 255.0f, 60 / 255.0f, 60 / 255.0f);
                     case 6:
                         //yellow
                         return new Color(255 / 255.0f, 255 / 255.0f, 112 / 255.0f);

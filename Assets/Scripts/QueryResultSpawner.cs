@@ -21,6 +21,14 @@ public class QueryResultSpawner : MonoBehaviour, UnityCineastApi.QueryResultCall
     [SerializeField] private float deletionAreaRange = 0.1f;
     [SerializeField] private SpawnSpot[] spawnSpots = new SpawnSpot[0];
 
+    public class DummyMaterialLoader : IMaterialStreamProvider
+    {
+        public Stream Open(string materialFilePath)
+        {
+            return null;
+        }
+    }
+
     public void OnCineastQueryCompleted(List<UnityCineastApi.QueryResult> results)
     {
         if(deletionArea != null)
@@ -46,7 +54,7 @@ public class QueryResultSpawner : MonoBehaviour, UnityCineastApi.QueryResultCall
         {
             var result = results[j];
 
-            var loader = factory.Create();
+            var loader = factory.Create(new DummyMaterialLoader());
 
             LoadResult objLoadResult;
             using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(result.objModel)))
@@ -115,9 +123,11 @@ public class QueryResultSpawner : MonoBehaviour, UnityCineastApi.QueryResultCall
             {
                 foreach (var face in group.Faces)
                 {
-                    for (int i = 0; i < face.Count; i++)
-                    {
-                        meshIndices.Add(face[i].VertexIndex - 1);
+                    if(face.Count == 3) { 
+                        for (int i = 0; i < 3; i++)
+                        {
+                            meshIndices.Add(face[i].VertexIndex - 1);
+                        }
                     }
                 }
             }

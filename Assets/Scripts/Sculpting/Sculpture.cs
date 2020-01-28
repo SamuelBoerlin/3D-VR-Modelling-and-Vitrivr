@@ -50,6 +50,63 @@ namespace Sculpting
             return chunk;
         }
 
+        public Dictionary<ChunkPos, SculptureChunk>.ValueCollection GetChunks()
+        {
+            return chunks.Values;
+        }
+
+        public void Clear()
+        {
+            foreach(var chunk in chunks.Values)
+            {
+                chunk.Dispose();
+            }
+            chunks.Clear();
+        }
+
+        public void ApplyGrid(int x, int y, int z, NativeArray3D<Voxel> grid)
+        {
+            int minX = Mathf.FloorToInt(x / chunkSize);
+            int minY = Mathf.FloorToInt(y / chunkSize);
+            int minZ = Mathf.FloorToInt(z / chunkSize);
+
+            int maxX = Mathf.FloorToInt((x + grid.Length(0)) / chunkSize);
+            int maxY = Mathf.FloorToInt((y + grid.Length(1)) / chunkSize);
+            int maxZ = Mathf.FloorToInt((z + grid.Length(2)) / chunkSize);
+
+            var handles = new List<SculptureChunk.FinalizeChange>();
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            //Schedule all jobs
+            for (int cx = minX; cx <= maxX; cx++)
+            {
+                for (int cy = minY; cy <= maxY; cy++)
+                {
+                    for (int cz = minZ; cz <= maxZ; cz++)
+                    {
+                        ChunkPos chunkPos = ChunkPos.FromChunk(cx, cy, cz);
+
+                        chunks.TryGetValue(chunkPos, out SculptureChunk chunk);
+                        if (chunk == null)
+                        {
+                            chunks[chunkPos] = chunk = new SculptureChunk(this, chunkPos, chunkSize);
+                        }
+
+                        var sx = Mathf.Max(0, x - cx * chunkSize);
+                        var sy = Mathf.Max(0, y - cy * chunkSize);
+                        var sz = Mathf.Max(0, z - cz * chunkSize);
+
+                        var gx = cx * chunkSize - x;
+                        var gy = cy * chunkSize - y;
+                        var gz = cz * chunkSize - z;
+
+                        chunk.ScheduleGrid(sx, sy, sz, gx, gy, gz, grid);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Applies the specified signed distance field function to the sculpture.
         /// The SDF is applied in local space, i.e. 1 voxel = 1 unit on the signed distance field!
@@ -186,11 +243,6 @@ namespace Sculpting
 
             result = new RayCastResult(Vector3.zero, Vector3.zero, null);
             return false;
-        }
-
-        public Dictionary<ChunkPos, SculptureChunk>.ValueCollection GetChunks()
-        {
-            return chunks.Values;
         }
 
         void Start()

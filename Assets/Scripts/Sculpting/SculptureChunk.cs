@@ -57,6 +57,43 @@ namespace Sculpting
             return voxels[x, y, z].Material;
         }
 
+        //TODO Make job as well
+        public void ScheduleGrid(int sx, int sy, int sz, int gx, int gy, int gz, NativeArray3D<Voxel> grid)
+        {
+            var width = grid.Length(0);
+            var height = grid.Length(1);
+            var depth = grid.Length(2);
+
+            for(int z = 0; z < chunkSize; z++)
+            {
+                for (int y = 0; y < chunkSize; y++)
+                {
+                    for (int x = 0; x < chunkSize; x++)
+                    {
+                        var cvx = x + sx;
+                        var cvy = y + sy;
+                        var cvz = z + sz;
+
+                        var gvx = x + gx;
+                        var gvy = y + gy;
+                        var gvz = z + gz;
+
+                        if(cvx >= 0 && cvx < chunkSize && cvy >= 0 && cvy < chunkSize && cvz >= 0 && cvz < chunkSize &&
+                            gvx >= 0 && gvx < width && gvy >= 0 && gvy < height && gvz >= 0 && gvz < depth)
+                        {
+                            voxels[cvx, cvy, cvz] = grid[gvx, gvy, gvz];
+                        }
+                    }
+                }
+            }
+
+            NeedsRebuild = true;
+
+            //Update the padding of all -X/-Y/-Z adjacent chunks
+            //TODO Only propagate those sides that have changed
+            PropagatePadding();
+        }
+
         public delegate void FinalizeChange();
         public FinalizeChange ScheduleSdf<TSdf>(float ox, float oy, float oz, TSdf sdf, int material, bool replace)
             where TSdf : struct, ISdf

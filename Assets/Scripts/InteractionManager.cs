@@ -1,4 +1,6 @@
 ﻿using Sculpting;
+using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +12,8 @@ public class InteractionManager : MonoBehaviour
     [SerializeField] private string triggerInput = "";
 
     [SerializeField] private string smearToggleInput = "";
+
+    [SerializeField] private string voxelizeInput = "";
 
     [SerializeField] private GameObject guiPrefab = null;
 
@@ -34,6 +38,7 @@ public class InteractionManager : MonoBehaviour
 
     private bool wasTriggerDown = false;
     private bool wasSmearToggleDown = false;
+    private bool wasVoxelizeDown = false;
 
     private bool _isSmearMode = false;
     private bool IsSmearMode
@@ -88,13 +93,54 @@ public class InteractionManager : MonoBehaviour
         }
         wasSmearToggleDown = isSmearToggleDown;
 
+        GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
+
+        bool isVoxelizeDown = Input.GetAxis(voxelizeInput) > 0.5f;
+        if (!wasVoxelizeDown && isVoxelizeDown)
+        {
+            if (sculpture != null && grabber.transform.childCount > 0)
+            {
+                var child = grabber.transform.GetChild(0);
+                var meshFilter = child.GetComponent<MeshFilter>();
+                if (meshFilter != null && meshFilter.mesh != null && meshFilter.mesh.isReadable)
+                {
+                    var mesh = meshFilter.mesh;
+                    var triangles = mesh.triangles;
+                    var vertices = mesh.vertices;
+
+                    var inVertices = new NativeArray<float3>(triangles.Length, Allocator.TempJob);
+
+                    for (int l = triangles.Length, i = 0; i < l; i += 3)
+                    {
+                        inVertices[i] = vertices[triangles[i]];
+                        inVertices[i + 1] = vertices[triangles[i + 1]];
+                        inVertices[i + 2] = vertices[triangles[i + 2]];
+                    }
+
+                    var outVoxels = new NativeArray3D<Voxel>(64, 64, 64, Allocator.TempJob);
+
+                    Voxelizer.Voxelize(inVertices, outVoxels, material);
+
+                    sculpture.transform.rotation = Quaternion.identity;
+                    sculpture.transform.localScale = 0.0125f * Vector3.one;
+                    sculpture.transform.position = Vector3.zero;
+
+                    sculpture.GetComponent<Sculpture>().Clear();
+                    sculpture.GetComponent<Sculpture>().ApplyGrid(0, 80, 0, outVoxels);
+
+                    inVertices.Dispose();
+                    outVoxels.Dispose();
+                }
+            }
+        }
+        wasVoxelizeDown = isVoxelizeDown;
+
         var brushPosition = pointerHandTransform.position + pointerHandTransform.rotation * new Vector3(0, 0, 0.3f);
 
-        GameObject sculpture = GameObject.FindGameObjectWithTag("Sculpture");
         if (sculpture != null)
         {
             Color previewColor;
-            switch(opType)
+            switch (opType)
             {
                 default:
                 case OperationType.Union:

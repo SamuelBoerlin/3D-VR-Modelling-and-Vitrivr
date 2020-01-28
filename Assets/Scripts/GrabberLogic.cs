@@ -49,11 +49,9 @@ public class GrabberLogic : MonoBehaviour
             foreach (var queryResultObject in queryResults)
             {
                 var collider = queryResultObject.GetComponent<Collider>();
-                Debug.Log(queryResultObject);
                 if (collider != null)
                 {
-                    Debug.Log((collider.ClosestPoint(transform.position) - transform.position).magnitude);
-                    if ((collider.ClosestPoint(transform.position) - transform.position).magnitude < 0.1f)
+                    if ((collider.ClosestPoint(transform.position) - transform.position).magnitude < 0.05f)
                     {
                         queryResultObject.transform.SetParent(this.gameObject.transform);
                         Rigidbody rb = queryResultObject.GetComponent<Rigidbody>();
@@ -90,23 +88,18 @@ public class GrabberLogic : MonoBehaviour
             if (Input.GetButton(scaleInput))
             {
                 float handDistance = Vector3.Distance(transform.position, scaleHandTransform.position);
-                Debug.Log(IsScaling);
                 if (!IsScaling)
                 {
                     initialScalePosition = child.transform.localPosition;
                     initialScale = child.transform.localScale.x;
                     initialScaleDistance = handDistance;
                     IsScaling = true;
-
-                    Debug.Log("initPos: " + initialScalePosition);
                 }
 
                 float dst = (handDistance - initialScaleDistance);
                 float newScale = initialScale + dst * scaleStrength;
                 //Debug.Log("Scale: " + newScale);
                 //Matrix4x4 scaling = Matrix4x4.TRS(child.transform.localPosition, Quaternion.identity, Vector3.one * newScale);
-
-                Debug.Log("NEW SCALE: " + newScale);
 
                 child.transform.localScale = Vector3.one * newScale;
                 child.transform.localPosition = initialScalePosition + initialScalePosition * (newScale - initialScale) / initialScale; // * newScale - initialScalePosition * newScale;

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using ObjLoader.Loader.Loaders;
 using System.IO;
+using static QueryResultSpawner;
 
 namespace Cineast_OpenAPI_Implementation
 {
@@ -9,7 +10,7 @@ namespace Cineast_OpenAPI_Implementation
         public static string Convert(Stream stream)
         {
             var factory = new ObjLoaderFactory();
-            var loader = factory.Create();
+            var loader = factory.Create(new DummyMaterialLoader());
 
             var result = loader.Load(stream);
 
